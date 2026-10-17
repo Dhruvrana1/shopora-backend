@@ -6,8 +6,7 @@ const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../services/email.service");
 const crypto = require("crypto");
 
-const FRONTEND_URL = "http://localhost:5173";
-
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const createSession = async (userRecord, res) => {
     const accessToken = jwt.sign(
         { id: userRecord.id },
@@ -79,9 +78,9 @@ const userRegister = async (req, res) => {
             verificationExpires
         );
 
-        const backendUrl = process.env.BACKEND_URL;
-        const verificationLink =
-            `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+        const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
+
+        const verificationLink = `${BACKEND_URL}/api/auth/verify-email?token=${verificationToken}`;
 
         try {
             await sendEmail(
