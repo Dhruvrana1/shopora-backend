@@ -13,22 +13,50 @@ const transporter = nodemailer.createTransport({
     greetingTimeout: 15000,
     socketTimeout: 20000
 });
+
 const sendEmail = async (to, subject, message) => {
     try {
-        const info = await transporter.sendMail({
-            from: `"Shopora" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
-            to,
-            subject,
-            html: message
-        });
+        const response = await fetch(
+            "https://api.brevo.com/v3/smtp/email",
+            {
+                method: "POST",
+                headers: {
+                    "accept": "application/json",
+                    "api-key": process.env.BREVO_API_KEY,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: "Shopora",
+                        email: process.env.EMAIL_FROM,
+                    },
+                    to: [{ email: to }],
+                    subject,
+                    htmlContent: message,
+                }),
+                signal: AbortSignal.timeout(20000),
+            }
+        );
 
-        console.log("Email sent successfully:", info.messageId);
+        const data = await response.json().catch(() => ({}));
 
-        return info;
+        if (!response.ok) {
+            throw new Error(
+                `Brevo API error (${response.status}): ${
+                    data.message || JSON.stringify(data)
+                }`
+            );
+        }
+
+        console.log("Email sent successfully:", data.messageId);
+        return data;
     } catch (error) {
         console.error("Email sending failed:", error.message);
         throw error;
     }
 };
+
+module.exports = { sendEmail };
+
 
 module.exports = { sendEmail };
