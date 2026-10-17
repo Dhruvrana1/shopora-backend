@@ -13,6 +13,10 @@ const pool = new Pool({
         : false
 });
 
+pool.on("error", (err) => {
+    console.error("Unexpected idle database connection error:", err.message);
+});
+
 pool.connect()
     .then((client) => {
         console.log("db connected successfully");
@@ -21,5 +25,7 @@ pool.connect()
     .catch((error) => {
         console.log("db connection failed", error.message);
     });
+
+
 
 module.exports = pool;
