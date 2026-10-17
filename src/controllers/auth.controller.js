@@ -39,6 +39,7 @@ const createSession = async (userRecord, res) => {
     return accessToken;
 };
 
+
 const userRegister = async (req, res) => {
     try {
         const { first_name, last_name, email, mobile, password } = req.body;
@@ -68,7 +69,9 @@ const userRegister = async (req, res) => {
         );
 
         const verificationToken = crypto.randomBytes(32).toString("hex");
-        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const verificationExpires = new Date(
+            Date.now() + 24 * 60 * 60 * 1000
+        );
 
         await user.saveVerificationToken(
             email,
@@ -76,38 +79,46 @@ const userRegister = async (req, res) => {
             verificationExpires
         );
 
+        const backendUrl = process.env.BACKEND_URL;
         const verificationLink =
-    `http://localhost:3000/api/auth/verify-email?token=${verificationToken}`;
+            `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
 
-        await sendEmail(
-            email,
-            "Verify your Shopora account",
-            `
-                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px;">
-                    <h1 style="color: #222;">Welcome to Shopora!</h1>
-                    <p>Thank you for creating your account.</p>
-                    <p>Please verify your email address to activate your Shopora account.</p>
-                    <a href="${verificationLink}"
-                       style="display: inline-block; padding: 12px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-                        Verify My Email
-                    </a>
-                    <p style="margin-top: 24px; color: #666; font-size: 13px;">
-                        If you didn't create this account, you can ignore this email.
-                    </p>
-                    <p>Thanks,<br>Team Shopora</p>
-                </div>
-            `
-        );
+        try {
+            await sendEmail(
+                email,
+                "Verify your Shopora account",
+                `
+                    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px;">
+                        <h1>Welcome to Shopora!</h1>
+                        <p>Thank you for creating your account.</p>
+                        <p>Please verify your email address.</p>
+                        <a href="${verificationLink}"
+                           style="display:inline-block;padding:12px 20px;background:#2563eb;color:white;text-decoration:none;border-radius:6px;">
+                            Verify My Email
+                        </a>
+                        <p>Thanks,<br>Team Shopora</p>
+                    </div>
+                `
+            );
 
-        return res.status(201).json({
-            message: "User registered successfully. Please verify your email.",
-            user: result,
-        });
+            return res.status(201).json({
+                message: "Account created. Please check your email to verify it.",
+                user: result,
+            });
+        } catch (emailError) {
+            console.error("Verification email failed:", emailError.message);
+
+            return res.status(201).json({
+                message: "Account created, but the verification email could not be sent. Please try again later.",
+                user: result,
+                emailSent: false,
+            });
+        }
     } catch (error) {
-        console.error("Registration failed:", error);
+        console.error("Registration failed:", error.message);
 
         return res.status(500).json({
-            message: "Internal server error",
+            message: "Registration failed. Please try again.",
         });
     }
 };
