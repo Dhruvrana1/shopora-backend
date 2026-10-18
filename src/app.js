@@ -20,7 +20,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://shopora-frontend-eight.vercel.app",
-  "https://shopora-admin-g0cux6ktl-dhruv-s-projects-60c7bcdc.vercel.app"
+  "https://shopora-admin-psi.vercel.app"
 ];
 
 // Allow only your known customer preview deployment pattern.
